@@ -1,11 +1,11 @@
 import socket
-import threading
 import json
-from crypto_utils import encrypt_message, decrypt_message
+import threading
+import sys
+import time
 
 HOST = '127.0.0.1'
 PORT = 5000
-
 
 class Client:
     def __init__(self, username, password):
@@ -13,92 +13,117 @@ class Client:
         self.password = password
         self.sock = socket.socket()
         self.sock.connect((HOST, PORT))
-
         self.reader = self.sock.makefile('r')
         self.writer = self.sock.makefile('w')
+        self.running = True
 
     def send(self, data):
-        self.writer.write(json.dumps(data) + '\n')
-        self.writer.flush()
+        try:
+            self.writer.write(json.dumps(data) + '\n')
+            self.writer.flush()
+        except Exception as e:
+            print(f'Send error: {e}')
 
     def receive_loop(self):
-        while True:
+        while self.running:
             try:
-                msg = self.reader.readline()
-                if not msg:
+                line = self.reader.readline()
+                if not line:
                     break
-
-                data = json.loads(msg)
-
+                    
+                data = json.loads(line.strip())
+                
                 if data['type'] == 'message':
-                    try:
-                        text = decrypt_message(data['payload'], self.password)
-                        print(f"\n{data['from']}: {text}")
-                    except:
-                        print(f"\n{data['from']}: <cannot decrypt>")
-
+                    # Send message to stdout (will be caught by Node)
+                    print(f"{data['from']}: {data['payload']}")
+                    sys.stdout.flush()
+                    
                 elif data['type'] == 'user_list':
-                    print(f"\nUsers: {', '.join(data['users'])}")
-
+                    # Send user list to stdout
+                    print('Users: ' + ', '.join(data['users']))
+                    sys.stdout.flush()
+                    
+                elif data['type'] == 'register_ok':
+                    # Send registration confirmation
+                    print('Registered')
+                    sys.stdout.flush()
+                    
                 elif data['type'] == 'error':
-                    print(f"\nError: {data['message']}")
-
-            except:
+                    # Send error to stdout
+                    print(f'Error: {data["message"]}')
+                    sys.stdout.flush()
+                    
+            except Exception as e:
+                if self.running:
+                    print(f'Error in receive loop: {e}')
+                    sys.stdout.flush()
                 break
 
     def run(self):
+        # Send registration to Python server
+        print(f"Sending registration for {self.username}")
+        sys.stdout.flush()
         self.send({'type': 'register', 'username': self.username})
-
-        response = json.loads(self.reader.readline())
-        if response.get('type') != 'register_ok':
-            print("Failed to connect")
-            return
-
-        threading.Thread(target=self.receive_loop, daemon=True).start()
-
-        print("Commands:")
-        print("/msg USER MESSAGE")
-        print("/users")
-        print("/quit")
-
-        while True:
-            cmd = input("> ")
-
-            if cmd.startswith("/msg "):
-                parts = cmd.split(" ", 2)
-                if len(parts) < 3:
-                    print("Usage: /msg user message")
+        
+        # Start receive thread
+        receive_thread = threading.Thread(target=self.receive_loop, daemon=True)
+        receive_thread.start()
+        
+        # Read commands from stdin (from Node WebSocket)
+        while self.running:
+            try:
+                cmd = sys.stdin.readline().strip()
+                if not cmd:
                     continue
-
-                user = parts[1]
-                message = parts[2]
-
-                encrypted = encrypt_message(message, self.password)
-
-                self.send({
-                    'type': 'message',
-                    'from': self.username,
-                    'to': user,
-                    'payload': encrypted
-                })
-
-            elif cmd == "/users":
-                self.send({'type': 'list_users'})
-
-            elif cmd == "/quit":
-                self.send({'type': 'exit'})
+                
+                print(f"Processing command: {cmd}")
+                sys.stdout.flush()
+                    
+                if cmd.startswith('/msg '):
+                    parts = cmd.split(' ', 2)
+                    if len(parts) != 3:
+                        print('Usage: /msg target message')
+                        sys.stdout.flush()
+                        continue
+                    target, text = parts[1], parts[2]
+                    print(f"Sending message to {target}: {text}")
+                    sys.stdout.flush()
+                    self.send({'type': 'message', 'to': target, 'payload': text})
+                    
+                elif cmd == '/users':
+                    print("Requesting user list")
+                    sys.stdout.flush()
+                    self.send({'type': 'user_list'})
+                    
+                elif cmd == '/quit':
+                    break
+                    
+            except Exception as e:
+                print(f'Error processing command: {e}')
+                sys.stdout.flush()
                 break
-
+        
+        self.running = False
         self.sock.close()
 
-
 def main():
-    username = input("Username: ")
-    password = input("Shared password: ")
+    if len(sys.argv) < 3:
+        print('Error: Missing username or password')
+        sys.stdout.flush()
+        sys.exit(1)
+    
+    username = sys.argv[1]
+    password = sys.argv[2]
+    
+    print(f"Starting client for {username}")
+    sys.stdout.flush()
+    
+    try:
+        client = Client(username, password)
+        client.run()
+    except Exception as e:
+        print(f'Error: {e}')
+        sys.stdout.flush()
 
-    client = Client(username, password)
-    client.run()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
