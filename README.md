@@ -61,38 +61,56 @@ To run this project, you need:
 <span style="color: purple;">***RUBRIC NOTE: The grader must be able to copy-paste these commands.***</span>
 
 
-### **Step 1: Start the Server**
+### **Step 1: Start the Python Server**
 
-Open your terminal and navigate to the project folder. The server binds to 127.0.0.1 on port 5050\.  
+Open your terminal and navigate to the project folder. The server binds to 127.0.0.1 on port 5000\.  
 ```bash
 python server.py  
-# Console output: "[STARTING] Server is listening on 127.0.0.1:5050"
+# Console output: "Python server running on 0.0.0.0:5000"
 ```
 
-### **Step 2: Connect Player 1 (X)**
+### **Step 2: Start the Node.js WebSocket Server**
 
-Open a **new** terminal window (keep the server running). Run the client script to start the first client.  
+Open a **new** terminal window (keep the first server running). The Node.js server acts as a bridge between the React frontend and Python clients, binding to port 3001.  
 ```bash
-python client.py  
-# Console output: "Connected. Waiting for opponent..."
+node server.js  
+# Console output: "WebSocket server listening on ws://localhost:3001"
 ```
 
-### **Step 3: Connect Player 2 (O)**
+### **Step 3: Start the React Application**
 
-Open a **third** terminal window. Run the client script again to start the second client.  
+Open a **third** terminal window. **Navigate to the React app directory** and start the development server. 
 ```bash
-python client.py  
-# Console output: "Connected. Waiting for opponent..."
-# Console output: "Match found! You are Player O."
+npm run dev  
+# Console output:
+# > 371-project@0.0.0 dev
+# > vite
+
+# VITE v8.0.2  ready in [time] ms
+
+#  ➜  Local:   http://localhost:5173/ (note: this should be a link)
+#  ➜  Network: use --host to expose
+#  ➜  press h + enter to show help
 ```
 
-### **Step 4: Gameplay**
+### **Step 4: Connect Both Users**
 
-1. **Player X** will be prompted: Enter row and col (e.g., '1 1'):.  
-2. Type two numbers separated by a space (from 0 to 2\) and press Enter.  
-3. The server updates the board on both screens.  
-4. **Player O** takes their turn.  
-5. The connection naturally terminates when a win/draw is achieved.
+1. Connect the first user by opening the link given in step 3 in a new window.
+2. Enter a username (e.g., "Alice") and a shared password (e.g., "secret123")
+3. Click Connect
+4. Connect the second user by opening the link given in step 3 in a **different** window.
+5. Enter a different username (e.g., "Bob") and the same shared password (e.g., "secret123").
+6. Click Connect (both users will see each other in the Online Users panel).
+
+### **Step 5: Start Chatting**
+1. Within the first window, select a recipient from the Online Users panel by clicking on their name (e.g., "Bob"). The selected recipient will be highlighted in green.
+2. Type a message in the input box: (e.g., `Hello Bob!`).
+3. Click the Send button.
+4. The message will appear in:
+    * Your chat window (as "Alice → Bob: Hello Bob!")
+    * Bob's chat window (as "Alice: Hello Bob!"
+5. Bob can now reply by selecting "Alice" and typing a response.
+6. To disconnect, simply close the browser tab or window. The WebSocket connection closes and the Python client process terminates.
 
 ## **5\. Technical Protocol Details (JSON over TCP & Inter-Process Communication)**
 
