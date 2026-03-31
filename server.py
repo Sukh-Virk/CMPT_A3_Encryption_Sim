@@ -160,14 +160,7 @@ def start():
     s.bind((HOST, PORT))
     s.listen()
     print(f'Python server running on {HOST}:{PORT}')
-    print('=' * 50)
-    print('Chat Room Password System:')
-    print('- First user sets the room password')
-    print('- All subsequent users must use the same password')
-    print('- Room password resets when the last user disconnects')
-    print('=' * 50)
-    print()
-    
+  
     while True:
         conn, addr = s.accept()
         print(f"New connection from {addr}")
