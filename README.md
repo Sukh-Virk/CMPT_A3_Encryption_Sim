@@ -1,4 +1,4 @@
-# **CMPT 371 A3 Socket Programming `Tic-Tac-Toe`**
+# **CMPT 371 A3 Socket Programming `End-to-end Encrypted Messenger`**
 
 **Course:** CMPT 371 \- Data Communications & Networking  
 **Instructor:** Mirza Zaeem Baig  
@@ -9,24 +9,36 @@
 
 | Name | Student ID | Email |
 | :---- | :---- | :---- |
-| Jane Doe | 301111111 | jane.doe@university.edu |
-| John Smith | 301222222 | john.smith@university.edu |
+| Julianna Morena | 301577023 | jam46@sfu.ca |
+| Sukhman Virk | 301468282 | john.smith@university.edu |
 
 ## **1\. Project Overview & Description**
 
-This project is a multiplayer Tic-Tac-Toe game built using Python's Socket API (TCP). It allows two distinct clients to connect to a central server, be matched into a game lobby, and play against each other in real-time. The server handles the game logic, board state validation, and win-condition checking, ensuring that clients cannot cheat by modifying their local game state.
+This project is a secure, multi-user chat application built using Python's Socket API (TCP) for backend communication and React with WebSockets for the frontend interface. It allows multiple clients to connect to a central Python server, register with unique usernames, and exchange private messages with other online users in real-time. The system features end-to-end message encryption using a shared password, ensuring that message content remains confidential even if intercepted. The architecture consists of three layers: a Python server managing user sessions and message routing, a Node.js WebSocket server that bridges the React frontend with the Python client processes, and a React-based GUI that provides a modern, responsive chat experience. The server handles user authentication, maintains real-time user lists, validates message formats, and ensures that messages are only delivered to intended recipients, preventing unauthorized access or message interception.
 
 ## **2\. System Limitations & Edge Cases**
 
 As required by the project specifications, we have identified and handled (or defined) the following limitations and potential issues within our application scope:
 
-* **Handling Multiple Clients Concurrently:** 
-  * <span style="color: green;">*Solution:*</span> We utilized Python's threading module. When two clients connect, they are popped from the matchmaking\_queue and assigned to an isolated game\_session daemon thread. This ensures concurrent games do not block the main server event listener.  
-  * <span style="color: red;">*Limitation:*</span> Thread creation is limited by system resources. An enterprise application would eventually need a thread pool or asynchronous I/O (like asyncio) to handle tens of thousands of connections.  
-* **TCP Stream Buffering:** 
-  * <span style="color: green;">*Solution:*</span> TCP is a continuous byte stream, meaning multiple JSON messages can be mashed together if sent rapidly. We implemented an application-layer fix by appending a newline \\n to all JSON payloads and splitting the buffer on the client/server side to process them atomically.  
+* **Cross-Layer Communication & Process Management:**
+  * <span style="color: green;">*Solution:*</span> We established a three-tier architecture where the React frontend communicates via WebSocket to a Node.js server, which spawns individual Python client processes. Each Python client maintains a persistent TCP connection to the central Python server. The Node.js server acts as a bidirectional bridge, forwarding messages between the browser and Python processes while managing process lifecycle and stdout/stderr buffering.
+
+   * <span style="color: red;">*Limitation:*</span> Process spawning introduces latency and resource overhead per connection. In a high-traffic scenario, the Node.js server would need to implement connection pooling, reuse Python processes, or consider a unified WebSocket-native Python backend to eliminate the intermediary process layer.
+ 
+* **User State Management & Consistency:**
+  * <span style="color: green;">*Solution:*</span> The Python server maintains a centralized dictionary of connected clients and their associated connection objects. When users join or leave, the server broadcasts the updated user list to all connected clients, ensuring consistency across the distributed system. The React frontend updates its UI immediately upon receiving these broadcasts
+
+   * <span style="color: red;">*Limitation:*</span> If a client disconnects abruptly (e.g., network failure, browser crash), the server may not immediately detect the disconnection until the TCP keepalive timeout occurs. This can result in stale user entries being displayed to other clients temporarily. A production implementation would require TCP keepalive settings or periodic heartbeat messages to detect stale connections more aggressively
+ 
+* **Message Encryption & Data Privacy:**
+  * <span style="color: green;">*Solution:*</span> We integrated encryption functionality using a shared password that both communicating parties must know. Messages are encrypted on the client side before transmission and decrypted on the receiving client, ensuring that even if network traffic is intercepted, message contents remain confidential.
+    
+  * <span style="color: red;">*Limitation:*</span> The encryption key (shared password) is transmitted once during initial connection and stored in memory on both the Python client and server. A more secure implementation would use public-key cryptography to establish session keys without exposing the shared secret, and implement proper key rotation mechanisms.
+ 
 * **Input Validation & Security:** 
-  * <span style="color: red;">*Limitation:*</span> The client side uses a basic try/except ValueError to prevent crashes from bad user input (like typing letters instead of numbers). However, malicious users could still theoretically modify the client script to send invalid coordinates. Our server assumes well-formatted JSON integers in this basic implementation.
+  * <span style="color: green;">*Solution:*</span> We implemented validation at multiple levels to prevent malformed data from crashing the system. The React frontend isables message sending when no recipient is selected or message is empty, preventing invalid WebSocket messages. The Python client validates message format (/msg recipient message) before sending to server, catching malformed commands, and the Python server verifies that incoming JSON payloads contain required fields (type, username, to, payload) before processing, and gracefully ignores malformed messages.
+
+  * <span style="color: red;">*Limitation:*</span> While we validate message structure, we do not implement message rate limiting, content filtering, or flood protection. A malicious user could theoretically spam the server with rapid messages, consuming resources. Additionally, message encryption is implemented but the shared password is transmitted in plaintext during initial connection, which would require TLS/SSL for proper production deployment.
 
 ## **3\. Video Demo**
 
