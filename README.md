@@ -50,9 +50,11 @@ Our 2-minute video demonstration covering connection establishment, data exchang
 
 To run this project, you need:
 
-* **Python 3.10** or higher.  
-* No external pip installations are required (uses standard socket, threading, json, sys libraries).  
-* (Optional) VS Code or Terminal.
+* **Python 3.7 or higher** or higher.  
+* *External pip installation required:* The `cryptography` library must be installed for encryption functionality.
+* Node.js 14 or higher (for WebSocket server)
+* npm (for managing Node.js and React dependencies)
+* VS Code / Code Editor (not tested on terminal)
 
 <span style="color: purple;">***RUBRIC NOTE: No external libraries are required. Therefore, a requirements.txt file is not strictly necessary for dependency installation, though one might be included for environment completeness.***</span>
 
