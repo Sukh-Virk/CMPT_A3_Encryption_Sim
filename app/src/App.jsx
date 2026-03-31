@@ -9,6 +9,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState('Disconnected')
   const [selectedRecipient, setSelectedRecipient] = useState('')
+  const [roomInfo, setRoomInfo] = useState(null)
   const ws = useRef(null)
   const messagesEndRef = useRef(null)
 
@@ -19,8 +20,6 @@ function App() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
-
- 
 
   const connect = () => {
     if (!username || !password) {
@@ -40,11 +39,36 @@ function App() {
     ws.current.onmessage = (event) => {
       const data = event.data
       
+      // Check for room creation or join messages
+      if (data === 'Room created! You are the host.') {
+        setRoomInfo({ type: 'host', message: data })
+        setIsLoggedIn(true)
+        setConnectionStatus('Logged in (Host)')
+        setTimeout(() => {
+          if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send('/users')
+          }
+        }, 500)
+        return
+      }
+      
+      if (data.startsWith('Joined room!')) {
+        setRoomInfo({ type: 'member', message: data })
+        setIsLoggedIn(true)
+        setConnectionStatus('Logged in')
+        setTimeout(() => {
+          if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send('/users')
+          }
+        }, 500)
+        return
+      }
+      
       // Check for registration confirmation
       if (data === 'Registered') {
         setIsLoggedIn(true)
         setConnectionStatus('Logged in')
-        // Request user list immediately after login
+        setRoomInfo(null)
         setTimeout(() => {
           if (ws.current && ws.current.readyState === WebSocket.OPEN) {
             ws.current.send('/users')
@@ -56,14 +80,15 @@ function App() {
       // Check for errors
       if (data.startsWith('Error:')) {
         alert(data)
-        if (data.includes('Username taken')) {
+        if (data.includes('Username taken') || data.includes('Incorrect room password')) {
           setIsLoggedIn(false)
           setConnectionStatus('Disconnected')
+          ws.current.close()
         }
         return
       }
       
-      // Check for user list
+      // Check for user list - don't display in messages
       if (data.startsWith('Users: ')) {
         const userList = data.replace('Users: ', '').split(', ')
         const otherUsers = userList.filter(u => u !== username)
@@ -74,21 +99,25 @@ function App() {
         return
       }
       
-      // Check for messages (format: "username: message")
       const colonIndex = data.indexOf(': ')
       if (colonIndex > 0) {
         const from = data.substring(0, colonIndex)
         const payload = data.substring(colonIndex + 2)
-        setMessages(prev => [...prev, { from, payload, timestamp: new Date() }])
+        // Only add if it's a valid message from a user
+        if (from && payload && !from.startsWith('Processing') && !from.startsWith('Sending')) {
+          setMessages(prev => [...prev, { from, payload, timestamp: new Date() }])
+        }
         return
       }
-  
+      
+      // Ignore any other messages (debug, commands, etc.)
+      console.log('Ignored non-message:', data)
     }
     
     ws.current.onclose = () => {
-   
       setConnectionStatus('Disconnected')
       setIsLoggedIn(false)
+      setRoomInfo(null)
     }
     
     ws.current.onerror = (error) => {
@@ -112,7 +141,7 @@ function App() {
       const fullMessage = `/msg ${selectedRecipient} ${message}`
       ws.current.send(fullMessage)
       
-      // Add to local messages
+  
       setMessages(prev => [...prev, { 
         from: `${username} → ${selectedRecipient}`, 
         payload: message,
@@ -136,7 +165,7 @@ function App() {
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Arial' }}>
       {!isLoggedIn ? (
         <div style={{ maxWidth: '400px', margin: '50px auto' }}>
-          <h2>💬 Chat Login</h2>
+          <h2>💬 Chat Room Login</h2>
           <div style={{ marginBottom: '10px' }}>
             <input 
               value={username} 
@@ -148,24 +177,33 @@ function App() {
               type="password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Shared Password" 
+              placeholder="Room Password" 
               style={{ padding: '8px', width: '100%' }}
             />
           </div>
           <button onClick={connect} style={{ padding: '10px', width: '100%', marginTop: '10px' }}>
-            Connect
+            Join / Create Room
           </button>
           <p style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-            Status: {connectionStatus}
+            Status: {connectionStatus}<br/>
+            <em>💡 First user sets the room password. All subsequent users must use the same password to join.</em>
           </p>
         </div>
       ) : (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-            <h2>💬 Chat Room</h2>
+            <div>
+              <h2>💬 Chat Room</h2>
+              {roomInfo && (
+                <p style={{ fontSize: '12px', color: '#4CAF50', marginTop: '-10px' }}>
+                  {roomInfo.message}
+                </p>
+              )}
+            </div>
             <div>
               <span>Logged in as: <strong>{username}</strong></span>
-              <button onClick={listUsers} style={{ marginLeft: '10px', padding: '5px 10px' }}>
+          
+              <button onClick={listUsers} style={{ marginLeft: '40px', padding: '5px 10px' }}>
                 Refresh Users
               </button>
             </div>
@@ -174,10 +212,10 @@ function App() {
           <div style={{ display: 'flex', gap: '20px' }}>
             {/* Users Panel */}
             <div style={{ width: '200px' }}>
-              <h3>👥 Online Users</h3>
+              <h3>👥 Members ({users.length})</h3>
               <div style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '10px' }}>
                 {users.length === 0 ? (
-                  <p style={{ color: '#999' }}>No other users online</p>
+                  <p style={{ color: '#999' }}>No other users in room</p>
                 ) : (
                   users.map(user => (
                     <div
@@ -199,7 +237,7 @@ function App() {
               </div>
             </div>
             
-            {/* Messages Panel */}
+            {/* Messages Panel*/}
             <div style={{ flex: 1 }}>
               <h3>📨 Messages</h3>
               <div style={{ 
@@ -257,8 +295,6 @@ function App() {
                 </div>
               </div>
             </div>
-            
-            
           </div>
         </div>
       )}

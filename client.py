@@ -2,7 +2,7 @@ import socket
 import json
 import threading
 import sys
-import time
+from crypto_utils import encrypt_message, decrypt_message
 
 HOST = '127.0.0.1'
 PORT = 5000
@@ -23,6 +23,7 @@ class Client:
             self.writer.flush()
         except Exception as e:
             print(f'Send error: {e}')
+            sys.stdout.flush()
 
     def receive_loop(self):
         while self.running:
@@ -34,9 +35,16 @@ class Client:
                 data = json.loads(line.strip())
                 
                 if data['type'] == 'message':
-                    # Send message to stdout (will be caught by Node)
-                    print(f"{data['from']}: {data['payload']}")
-                    sys.stdout.flush()
+                    # Decrypt the message payload
+                    encrypted_payload = data['payload']
+                    try:
+                        decrypted_text = decrypt_message(encrypted_payload, self.password)
+                        # Send decrypted message to stdout (will be caught by Node)
+                        print(f"{data['from']}: {decrypted_text}")
+                        sys.stdout.flush()
+                    except ValueError as e:
+                        print(f"Error: Failed to decrypt message from {data['from']}")
+                        sys.stdout.flush()
                     
                 elif data['type'] == 'user_list':
                     # Send user list to stdout
@@ -45,7 +53,8 @@ class Client:
                     
                 elif data['type'] == 'register_ok':
                     # Send registration confirmation
-                    print('Registered')
+                    msg = data.get('message', 'Registered')
+                    print(msg)
                     sys.stdout.flush()
                     
                 elif data['type'] == 'error':
@@ -60,10 +69,14 @@ class Client:
                 break
 
     def run(self):
-        # Send registration to Python server
+        # Send registration with password to Python server
         print(f"Sending registration for {self.username}")
         sys.stdout.flush()
-        self.send({'type': 'register', 'username': self.username})
+        self.send({
+            'type': 'register', 
+            'username': self.username,
+            'password': self.password
+        })
         
         # Start receive thread
         receive_thread = threading.Thread(target=self.receive_loop, daemon=True)
@@ -76,9 +89,6 @@ class Client:
                 if not cmd:
                     continue
                 
-                print(f"Processing command: {cmd}")
-                sys.stdout.flush()
-                    
                 if cmd.startswith('/msg '):
                     parts = cmd.split(' ', 2)
                     if len(parts) != 3:
@@ -86,13 +96,18 @@ class Client:
                         sys.stdout.flush()
                         continue
                     target, text = parts[1], parts[2]
-                    print(f"Sending message to {target}: {text}")
-                    sys.stdout.flush()
-                    self.send({'type': 'message', 'to': target, 'payload': text})
+                    
+                    # Encrypt the message before sending
+                    encrypted_text = encrypt_message(text, self.password)
+                    
+                    # Send encrypted message to server
+                    self.send({
+                        'type': 'message', 
+                        'to': target, 
+                        'payload': encrypted_text
+                    })
                     
                 elif cmd == '/users':
-                    print("Requesting user list")
-                    sys.stdout.flush()
                     self.send({'type': 'user_list'})
                     
                 elif cmd == '/quit':
