@@ -171,36 +171,35 @@ function App() {
         <>
         <div className="login-card">
           <div className="packet-track" aria-hidden>
-            <div className="packet p1">→</div>
-            <div className="packet p2">◦</div>
-            <div className="packet p3">◦</div>
-            <div className="packet p4">→</div>
+         
           </div>
-          <h2>💬 Chat Room Login</h2>
+          <h2 style={{color: 'black'}}>Chat Room Login</h2>
           <div className="login-form">
             <input 
               className="input-wide"
               value={username} 
               onChange={(e) => setUsername(e.target.value)} 
               placeholder="Username" 
+              style={{ border: '1px solid #ccc', color: 'black' }}
             />
             <input 
               className="input-wide"
               type="password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Room Password" 
+              placeholder="Room Password"
+              style={{ border: '1px solid #ccc', color: 'black' }}
             />
           </div>
           <button onClick={connect} className="btn-primary btn-full" style={{ marginTop: '10px', width: '100%' }}>
             Join / Create Room
           </button>
-          <p style={{ marginTop: '10px', fontSize: '12px', color: 'var(--muted)' }}>
+          <p style={{ marginTop: '10px', fontSize: '12px', color: 'black' }}>
             Status: {connectionStatus}<br/>
-            <em>💡 First user sets the room password. All subsequent users must use the same password to join.</em>
+            <em style={{color: 'black'}}>First user sets the room password. All subsequent users must use the same password to join.</em>
           </p>
         </div>
-        <BottomHub />
+     
         </>
       ) : (
         <div>
@@ -251,11 +250,11 @@ function App() {
             </div>
             
             {/* Messages Panel*/}
-            <div className="messages-panel" style={{ flex: 1 }}>
+            <div className="messages-panel" style={{ flex: 1, backgroundColor: '#0b0b0b' }}>
               <h3>📨 Messages</h3>
               <div className="messages-window" style={{ width: '600px' }}>
                 {messages.length === 0 ? (
-                  <p style={{ textAlign: 'center', color: '#999', marginTop: '180px' }}>
+                  <p style={{ textAlign: 'center', color: '#000000', marginTop: '180px' }}>
                     No messages yet. Select a user and start chatting!
                   </p>
                 ) : (
@@ -267,10 +266,10 @@ function App() {
                       borderRadius: '4px',
                       borderLeft: `3px solid ${msg.from === username ? '#2196f3' : '#4caf50'}`
                     }}>
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>
+                      <div style={{ fontSize: '12px', color: '#000000', marginBottom: '5px' }}>
                         {msg.from} • {msg.timestamp.toLocaleTimeString()}
                       </div>
-                      <div>{msg.payload}</div>
+                      <div style={{color: 'black'}}>{msg.payload}</div>
                     </div>
                   ))
                 )}
