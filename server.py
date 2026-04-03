@@ -1,6 +1,7 @@
 import socket
 import json
 import threading
+import sys
 
 HOST = '0.0.0.0'
 PORT = 5000
@@ -125,7 +126,9 @@ def handle_client(conn, addr):
                     send_json(writer, {'type': 'user_list', 'users': users})
                     
     except Exception as e:
-        print(f'Error handling client {username}:', e)
+        print('Connection terminated')
+        sys.exit(0)
+        
     finally:
         if username and username in clients:
             with lock:
@@ -138,6 +141,11 @@ def handle_client(conn, addr):
                     room_password = None
                     room_creator = None
                     print("Room is empty. Password has been reset. Next user will set new password.")
+                    
+                    # terminate when no body remains
+                    print("No users connected. Shutting down server...")
+                    sys.exit(0)
+                    
                 # If room creator leaves but others remain, keep the password
                 elif username == room_creator:
                     # Find a new room creator (first user in the list)
@@ -160,7 +168,7 @@ def start():
     s.bind((HOST, PORT))
     s.listen()
     print(f'Python server running on {HOST}:{PORT}')
-  
+    
     while True:
         conn, addr = s.accept()
         print(f"New connection from {addr}")
