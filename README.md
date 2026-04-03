@@ -10,7 +10,7 @@
 | Name | Student ID | Email |
 | :---- | :---- | :---- |
 | Julianna Morena | 301577023 | jam46@sfu.ca |
-| Sukhman Virk | 301468282 | john.smith@university.edu |
+| Sukhman Virk | 301468282 | ssv12@sfu.ca |
 
 ## **1\. Project Overview & Description**
 
