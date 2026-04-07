@@ -179,7 +179,7 @@ We designed a custom application-layer protocol for data exchange across three d
 
 * **Code Origin:**  
   * No outright Boiler plates were used. Functions were either hand made or altered by copilot or chatgpt for debugging.  
-  * **Gen AI Usage:**  
+* **Gen AI Usage:**  
   * ChatGPT was used to create a roadmap on where to begin and for brainstorming. It also assisted in debugging functions that weren’t working.
   * GitHub Copilot was used in assisting with generating functions like encryption and decryption. Some functions were handmade but were later altered if there were bugs with the help of GitHub Copilot.
   * DeepSeek assisted in the creation of the README.md.
