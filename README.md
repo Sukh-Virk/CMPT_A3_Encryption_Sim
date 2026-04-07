@@ -178,8 +178,6 @@ We designed a custom application-layer protocol for data exchange across three d
 
 ## **6\. Academic Integrity & References**
 
-<span style="color: purple;">***RUBRIC NOTE: List all references used and help you got. Below is an example.***</span>
-
 * **Code Origin:**  
   * No outright Boiler plates were used. Functions were either hand made or altered by copilot or chatgpt for debugging.  
   * **Gen AI Usage:**  
