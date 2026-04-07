@@ -3,7 +3,6 @@
 **Course:** CMPT 371 \- Data Communications & Networking  
 **Instructor:** Mirza Zaeem Baig  
 **Semester:** Spring 2026  
-<span style="color: purple;">***RUBRIC NOTE: As per submission guidelines, only one group member will submit the link to this repository on Canvas.***
 
 ## **Group Members**
 
@@ -182,7 +181,7 @@ We designed a custom application-layer protocol for data exchange across three d
   * No outright Boiler plates were used. Functions were either hand made or altered by copilot or chatgpt for debugging.  
   * **Gen AI Usage:**  
   * ChatGPT was used to create a roadmap on where to begin and for brainstorming. It also assisted in debugging functions that weren’t working.
-  * GitHub Copilot was used in assisting with generating encryption and decryption functions. Some functions were handmade but were later altered if there were bugs with the help of GitHub Copilot.
+  * GitHub Copilot was used in assisting with generating functions like encryption and decryption. Some functions were handmade but were later altered if there were bugs with the help of GitHub Copilot.
   * DeepSeek assisted in the creation of the README.md.
 * **References:**  
  * [Python Socket Programming HOWTO](https://docs.python.org/3/howto/sockets.html)  
