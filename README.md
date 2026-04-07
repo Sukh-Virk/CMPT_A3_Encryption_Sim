@@ -189,3 +189,9 @@ We designed a custom application-layer protocol for data exchange across three d
 * **References:**  
   * [Python Socket Programming HOWTO](https://docs.python.org/3/howto/sockets.html)  
   * [Real Python: Intro to Python Threading](https://realpython.com/intro-to-python-threading/)
+  *  [Python Sockets (Real Python)](https://realpython.com/python-sockets/)
+ * [React Setup (Official Docs)](https://react.dev/learn/start-a-new-react-project)
+ * [Vite Guide (React Setup)](https://vitejs.dev/guide/)
+ *  [Fernet (Symmetric Encryption) – Cryptography Documentation](https://cryptography.io/en/latest/fernet/)
+* [Cryptography Library Documentation](https://cryptography.io/en/latest/)
+* [Python Cryptography Tutorial (Fernet Explained)](https://www.geeksforgeeks.org/fernet-symmetric-encryption-using-cryptography-module-in-python/)
